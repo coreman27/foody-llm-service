@@ -63,6 +63,7 @@ resource "google_project_iam_member" "runtime_secret_accessor" {
 resource "google_cloudbuild_trigger" "deploy_on_push" {
   name        = var.trigger_name
   description = "Build and deploy foody-llm-service on branch push"
+  project     = var.project_id
 
   github {
     owner = var.repository_owner
@@ -81,15 +82,6 @@ resource "google_cloudbuild_trigger" "deploy_on_push" {
     _SECRET_NAME             = var.secret_name
     _RUNTIME_SERVICE_ACCOUNT = google_service_account.runtime.email
   }
-
-  included_files = [
-    "src/**",
-    "package.json",
-    "package-lock.json",
-    "tsconfig.json",
-    "Dockerfile",
-    "cloudbuild.yaml"
-  ]
 
   depends_on = [
     google_project_service.required_apis

@@ -1,0 +1,7 @@
+project_id       = "my-project-dev-479800"
+region           = "us-central1"
+service_name     = "foody-llm-service"
+secret_name      = "anthropic-api-key"
+repository_owner = "coreman27"
+repository_name  = "foody-llm-service"
+branch_regex     = "^dev$"
