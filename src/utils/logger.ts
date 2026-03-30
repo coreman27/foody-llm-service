@@ -11,6 +11,10 @@ const logger = winston.createLogger({
   ),
   defaultMeta: { service: 'foody-llm-service' },
   transports: [
+    // Always log to console so Cloud Run captures structured logs.
+    new winston.transports.Console({
+      format: winston.format.json(),
+    }),
     new winston.transports.File({ filename: 'error.log', level: 'error' }),
     new winston.transports.File({ filename: 'combined.log' }),
   ],

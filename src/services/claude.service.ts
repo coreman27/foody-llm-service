@@ -175,6 +175,14 @@ export const claudeVisionService = {
           processingTimeMs: processingTime,
         });
 
+        if (error.status === 401 || error.status === 403) {
+          throw {
+            statusCode: 502,
+            code: 'UPSTREAM_AUTH_FAILED',
+            message: 'Claude API authentication failed. Verify ANTHROPIC_API_KEY secret value.',
+          };
+        }
+
         if (error.status === 429) {
           throw {
             statusCode: 429,
