@@ -94,7 +94,7 @@ export const claudeVisionService = {
 
       // Call Claude Vision API
       const response = await client.messages.create({
-        model: 'claude-3-5-sonnet-20241022',
+        model: config.anthropic.model,
         max_tokens: 4096,
         messages: [
           {
@@ -196,6 +196,14 @@ export const claudeVisionService = {
             statusCode: 400,
             code: 'INVALID_REQUEST',
             message: 'Invalid request to Claude API',
+          };
+        }
+
+        if (error.status === 404) {
+          throw {
+            statusCode: 502,
+            code: 'MODEL_NOT_FOUND',
+            message: `Claude model not found: ${config.anthropic.model}`,
           };
         }
 
