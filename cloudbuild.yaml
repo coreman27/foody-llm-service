@@ -1,0 +1,85 @@
+steps:
+  # Install dependencies
+  - name: 'node:20'
+    entrypoint: npm
+    args: ['ci']
+    
+  # Run linter
+  - name: 'node:20'
+    entrypoint: npm
+    args: ['run', 'lint']
+    env:
+      - 'NODE_ENV=development'
+    
+  # Run tests
+  - name: 'node:20'
+    entrypoint: npm
+    args: ['run', 'test']
+    env:
+      - 'NODE_ENV=development'
+    
+  # Build the application
+  - name: 'node:20'
+    entrypoint: npm
+    args: ['run', 'build']
+    env:
+      - 'NODE_ENV=production'
+
+  # Build Docker image
+  - name: 'gcr.io/cloud-builders/docker'
+    args:
+      - 'build'
+      - '-t'
+      - 'gcr.io/$PROJECT_ID/foody-llm-service:$SHORT_SHA'
+      - '-t'
+      - 'gcr.io/$PROJECT_ID/foody-llm-service:latest'
+      - '.'
+
+  # Push Docker image to Container Registry
+  - name: 'gcr.io/cloud-builders/docker'
+    args:
+      - 'push'
+      - 'gcr.io/$PROJECT_ID/foody-llm-service:$SHORT_SHA'
+
+  # Push latest tag
+  - name: 'gcr.io/cloud-builders/docker'
+    args:
+      - 'push'
+      - 'gcr.io/$PROJECT_ID/foody-llm-service:latest'
+
+  # Deploy to Cloud Run
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk:slim'
+    entrypoint: gcloud
+    args:
+      - 'run'
+      - 'deploy'
+      - '${_SERVICE_NAME}'
+      - '--image=gcr.io/$PROJECT_ID/foody-llm-service:$SHORT_SHA'
+      - '--region=${_DEPLOY_REGION}'
+      - '--platform=managed'
+      - '--allow-unauthenticated'
+      - '--service-account=${_RUNTIME_SERVICE_ACCOUNT}'
+      - '--set-secrets=ANTHROPIC_API_KEY=${_SECRET_NAME}:latest'
+      - '--quiet'
+
+# Build configuration
+images:
+  - 'gcr.io/$PROJECT_ID/foody-llm-service:$SHORT_SHA'
+  - 'gcr.io/$PROJECT_ID/foody-llm-service:latest'
+
+# Timeout for build
+timeout: '1800s'
+
+# Build options
+options:
+  machineType: 'N1_HIGHCPU_8'
+  logging: CLOUD_LOGGING_ONLY
+  substitution_option: 'ALLOW_LOOSE'
+
+# Substitutions (can be overridden at build time)
+substitutions:
+  _CLOUDBUILD_SERVICE_ACCOUNT: 'foody-cloudbuild@${PROJECT_ID}.iam.gserviceaccount.com'
+  _DEPLOY_REGION: 'us-central1'
+  _SERVICE_NAME: 'foody-llm-service'
+  _RUNTIME_SERVICE_ACCOUNT: 'foody-llm-runtime@${PROJECT_ID}.iam.gserviceaccount.com'
+  _SECRET_NAME: 'anthropic-api-key'
